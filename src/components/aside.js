@@ -274,7 +274,7 @@ var asideoptions = {
 
                   }
                   function applyOptions() {
-                      element.addClass('aside-'+ options.side);
+                      element.addClass('aside-' + options.side);
                       element.css('top', options.topOffset && options.topOffset || 0);
                       element.css('bottom', options.bottomOffset && options.bottomOffset || 0);
                       if (options.width)

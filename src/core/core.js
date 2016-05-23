@@ -39,6 +39,16 @@ String.prototype.replaceAll = function (find, replace) {
     var str = this || '';
     return str.replace(new RegExp(find, 'g'), replace);
 };
+window.isEmpty = function isEmpty(obj) {
+    if (obj == null) return true;
+    if (obj.length > 0) return false;
+    if (obj.length === 0) return true;
+    for (var key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) return false;
+    }
+
+    return true;
+}
 if (typeof String.prototype.startsWith != 'function') {
     String.prototype.startsWith = function (str) {
         return this.slice(0, str.length) == str;
@@ -136,13 +146,11 @@ window.addResizeEvent = function (callback) {
                             bindElement(value);
                         else {
                             if (angular.isString(value)) {
-                                if (value.indexOf('{{') > -1 || value.indexOf('ng-bind') > -1) {
+                                if (value.indexOf('{{') > -1 || value.indexOf('ng-bind') > -1 || (value.indexOf('</') > -1 && value.indexOf('>') > -1)) {
                                     var complied = angular.element(value);
                                     $compile(complied)(scope)
                                     bindElement(complied);
                                 }
-                                else if (value.indexOf('</') > -1 && value.indexOf('>') > -1)
-                                    bindElement(angular.element(value));
                                 else
                                     bindElement(value);
                             }

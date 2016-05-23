@@ -50,13 +50,15 @@ angular.module('ngQuantum.loadingButton', ['ngQuantum.services.helpers'])
                         element.after(cloneElement);
                         $q.when(fn(scope, { $event: event }))
                         .then(function (res) {
-                            element.css('display', '');
-                            cloneElement.remove();
-                            successicon && element.prepend(successicon);
-                            successicon && setTimeout(function () {
-                                successicon.remove();
-                            }, options.timeout)
-                            options.onSuccess(scope, { $event: event, $data: res });
+                            setTimeout(function () {
+                                element.css('display', '');
+                                cloneElement.remove();
+                                successicon && element.prepend(successicon);
+                                successicon && setTimeout(function () {
+                                    successicon.remove();
+                                }, options.timeout)
+                                options.onSuccess(scope, { $event: event, $data: res });
+                            }, 300);
                             return res;
                         }, function (res) {
                             element.css('display', '');

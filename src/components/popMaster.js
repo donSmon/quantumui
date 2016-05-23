@@ -127,7 +127,7 @@
                           }
                           !options.$scope && scope.$destroy();
                       };
-                      $master.enter = function () {
+                      $master.enter = function (evt) {
                           var promise;
                           if (this !== $master)
                               $master.$currentElement = angular.element(this);
@@ -182,7 +182,7 @@
                           }
                           $target.removeClass(lastplacement);
                           lastplacement = options.placement;
-                          $target.css({ display: 'block', top: '', left: '' }).addClass(lastplacement);
+                          $target.css({ display: 'block', top: 0, left: 0 }).addClass(lastplacement);
                           $target.removeClass('with-arrow');
 
                           $master.$isShowing= true;
@@ -241,6 +241,7 @@
                           return promise;
                       };
                       $master.leave = function (evt) {
+                         
                           var promise;
                           if (this !== $master)
                               $master.$currentElement = angular.element(this);
@@ -319,11 +320,14 @@
                           return promise;
 
                       };
-                      $master.toggle = function (elem) {
-                          if (angular.isElement(elem))
-                              $master.$currentElement = elem;
+                      $master.toggle = function (evt) {
+                          
+                          if (angular.isElement(evt))
+                              $master.$currentElement = evt;
                           else if (this !== $master)
                               $master.$currentElement = angular.element(this);
+                          if (evt && evt.isDefaultPrevented() && $master.$currentElement[0].tagName.toLowerCase() != "a")
+                              return false;
 
                           $master.$isShown ? $master.leave() : $master.enter();
                       };
@@ -390,6 +394,10 @@
                           $master && $master.$isShown && $master.leave();
                       });
                       function onBodyClick(evt) {
+                          
+                          if (options.clearClick) {
+                             return $master.leave();
+                          }
                           if (evt.isDefaultPrevented())
                               return false;
                           var elm = $master.$currentElement && $master.$currentElement || element;
@@ -478,7 +486,7 @@
                           }
                           if (options.holdHoverDelta)
                               $target.off('mouseenter mouseleave', outerHoverTrigger);
-                          callback && callback.call($master);
+                          callback && callback.call  && callback.call($master);
                           $target && $target.css({ top: '', left: '' }).removeClass(lastplacement).removeClass(options.speed);
                           if (options.theme)
                               $target.removeClass(options.theme).removeClass(options.instanceName + '-' +options.theme);

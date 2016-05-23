@@ -275,7 +275,6 @@ angular.module('ngQuantum.tabset', ['ngQuantum.services.helpers'])
                 elm.on('click', function (evt) {
                     evt.preventDefault();
                     evt.stopPropagation();
-                    console.log(pane)
                     if (pane.active) return;
 
                     scope.$apply(function () {
@@ -299,7 +298,7 @@ angular.module('ngQuantum.tabset', ['ngQuantum.services.helpers'])
         };
     }])
    
-    .directive('tabContentTransclude', ['$animate', '$timeout', function ($animate, $timeout) {
+    .directive('tabContentTransclude', ['$animate', '$timeout', '$compile', function ($animate, $timeout, $compile) {
         return {
             restrict: 'A',
             require: '^nqTab',

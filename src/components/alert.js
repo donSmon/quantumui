@@ -3,7 +3,7 @@ angular.module('ngQuantum.alert', ['ngQuantum.popMaster', 'ngQuantum.services.he
     .run(['$templateCache', function ($templateCache) {
         'use strict';
         $templateCache.put('alert/alert.tpl.html',
-          "<div class=\"alert alert-dismissable\" tabindex=\"-1\" ng-class=\"alertType\"><div class=\"alert-inner\"><div class=\"alert-bg\" ng-class=\"alertType\"></div><a role=\"button\" tabindex=\"0\" class=\"close\" ng-click=\"$hide()\"><i ng-class=\"$closeIcon\"></i></a> <strong class=\"alert-title\" ng-if=\"title\" ng-bind=\"title\"></strong><span  ng-if=\"title\" ng-bind-html=\"content\"></span><div ng-if=\"!title\" ng-bind-html=\"content\"></div></div></div>"
+          "<div class=\"alert alert-dismissable\" tabindex=\"-1\" ng-class=\"alertType\"><div class=\"alert-inner\"><div class=\"alert-bg\" ng-class=\"alertType\"></div><a role=\"button\" tabindex=\"0\" class=\"close\" ng-click=\"$hide()\"><i ng-class=\"$closeIcon\"></i></a> <strong class=\"alert-title text-block\" ng-if=\"title\" ng-bind=\"title\"></strong><span  ng-if=\"title\" ng-bind-html=\"content\"></span><div ng-if=\"!title\" ng-bind-html=\"content\"></div></div></div>"
         );
 
     }])
@@ -74,10 +74,11 @@ angular.module('ngQuantum.alert', ['ngQuantum.popMaster', 'ngQuantum.services.he
                       container && container.show()
                       var promise = show();
                       $compile($alert.$target)(scope);
+                      
                       if (options.duration)
                           $timeout(function () {
                               $alert &&  $alert.hide();
-                          }, $helpers.ensureNumber(options.duration, 3000));
+                          }, ($helpers.ensureNumber(options.duration, 3)));
                       return promise;
                   };
                   var hide = $alert.hide;
@@ -153,7 +154,7 @@ angular.module('ngQuantum.alert', ['ngQuantum.popMaster', 'ngQuantum.services.he
 
                     var alert = $alert(options, attr);
                     if (angular.isDefined(attr.qsShowOn)) {
-                        scope.$watch(attr.qsShowOn, function (value) {
+                        scope.$parent.$watch(attr.qsShowOn, function (value) {
                             (firstLoad || value) && alert.toggle();
                             firstLoad = true;
                         })

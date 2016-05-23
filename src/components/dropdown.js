@@ -23,7 +23,9 @@ angular.module('ngQuantum.dropdown', ['ngQuantum.popMaster'])
             fireEmit: true,
             displayReflow: false,
             keyboard: true,
-            fixWidth:true
+            fixWidth: true,
+            clearClick: true,
+            holdHoverDelta:true
         };
         this.$get = [
           '$timeout',
@@ -77,7 +79,7 @@ angular.module('ngQuantum.dropdown', ['ngQuantum.popMaster'])
                       var promise = show(callback);
                       angular.element(document).off('keydown.nqDropdown.api.data');
                       angular.element(document).on('keydown.nqDropdown.api.data', $dropdown.$onKeyDown);
-
+                          
                       if (!scope.$$phase) {
                           scope.$apply(function () {
                               $dropdown.$target.focus();
@@ -90,14 +92,14 @@ angular.module('ngQuantum.dropdown', ['ngQuantum.popMaster'])
                           if(ew > tw)
                               $dropdown.$target.css('min-width', ew)
                       }
-                      element.parent().addClass('open')
+                      element && element.parent().addClass('open')
                       return promise;
                   };
                   var hide = $dropdown.hide;
                   $dropdown.hide = function (callback) {
                       scope.lastIndex = -1;
                       angular.element(document).off('keydown.nqDropdown.api.data');
-                      element.parent().removeClass('open')
+                      element && element.parent().removeClass('open')
                      return hide(callback);
                   };
                   if (attr && angular.isDefined(options.directive)) {
@@ -123,9 +125,10 @@ angular.module('ngQuantum.dropdown', ['ngQuantum.popMaster'])
       function ($dropdown, templateHelper) {
           return {
               restrict: 'EA',
+              scope: true,
               link: function postLink(scope, element, attr, transclusion) {
                   var options = {
-                      $scope: scope.$new()
+                      $scope: scope
                   };
                   
                   options.uniqueId = attr.qoUniqueId || attr.id || options.$scope.$id;

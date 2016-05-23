@@ -14,8 +14,8 @@ angular.module('ngQuantum.loading', ['ngQuantum.services.lazy'])
             placement: 'top',
             container: 'body',
             backdrop: false,
-            timeout: 2000,
-            delayHide: 500,
+            timeout: 500,
+            delayHide: 300,
             theme: false,
             showBar: true,
             showSpinner: true,
@@ -38,11 +38,11 @@ angular.module('ngQuantum.loading', ['ngQuantum.services.lazy'])
                   if (!container.length)
                       container = angular.element('body');
                   var scope = $loading.$scope = options.$scope || $rootScope.$new(), cancel;
-
+                  var showTimeout, hideTimeout;
                   var template = angular.element(getTemplate());
                   var place = options.container == 'body' ? 'prepend' : 'append';
                   $compile(template)(scope);
-                  $timeout(function () {
+                  setTimeout(function () {
                       container[place](template);
                   }, 0)
                   
@@ -64,21 +64,26 @@ angular.module('ngQuantum.loading', ['ngQuantum.services.lazy'])
                               scope.currentRate = 0;
                               $loading.updateProgress();
                           }, 0)
-                          
-                      options.timeout !== false &&
-                      $timeout(function () {
-                          $loading.hide();
-                      }, options.timeout)
+                      showTimeout && $timeout.cancel(showTimeout);
+                      if (options.timeout !== false) {
+                          showTimeout = $timeout(function () {
+                              $timeout.cancel(showTimeout);
+                              $loading.hide();
+                          }, options.timeout);
+                      }
+                      
                   };
-                  $loading.hide = function () {
-                      if (!$loading.isShown)
+                  $loading.hide = function (delay) {
+                      delay = delay || options.delayHide;
+                      if (!$loading.isShown || $http.$pendingRequestCount > 0)
                           return;
                       scope.currentRate = 100;
-                      $timeout(function () {
+                      hideTimeout && $timeout.cancel(hideTimeout);
+                      hideTimeout =  $timeout(function () {
                           template.css('display', 'none')
                           scope.currentRate = 0;
                           $loading.isShown = false;
-                      }, options.delayHide)
+                      }, delay)
 
                   };
                   $loading.updateProgress = function (rate) {

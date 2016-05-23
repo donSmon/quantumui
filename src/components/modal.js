@@ -37,6 +37,7 @@ angular.module('ngQuantum.modal', ['ngQuantum.popMaster'])
                 closeIcon: '<i class="fic fu-cross"></i>',
                 buildOnShow: true,
                 html: false,
+                killBodyScroll:false,
                 size: false,
                 displayReflow: false,
                 show: false,
@@ -110,8 +111,10 @@ angular.module('ngQuantum.modal', ['ngQuantum.popMaster'])
                       };
                       var show = $modal.show;
                       $modal.show = function () {
+                          if (options.killBodyScroll)
+                              angular.element('body').addClass('modal-open');
                          var promise = show();
-                          if (options.backdrop) {
+                         if (options.backdrop && backdropElement) {
                               if (options.backdropEffect) {
                                   backdropElement.addClass('in');
                                   backdropElement.show();
@@ -131,7 +134,7 @@ angular.module('ngQuantum.modal', ['ngQuantum.popMaster'])
                       };
                       var hide = $modal.hide;
                       $modal.hide = function () {
-                          if (options.backdrop) {
+                          if (options.backdrop && backdropElement) {
                               if (options.backdropEffect) {
                                   backdropElement.addClass('fade')
                                   backdropElement.removeClass('in')
@@ -145,6 +148,7 @@ angular.module('ngQuantum.modal', ['ngQuantum.popMaster'])
                               $helpers.bindTriggers(element, 'hover', $modal)
                           }
                           var promise = hide();
+                          promise.then &&
                           promise.then(function () {
                               if ($modal.$animateTarget && options.size)
                                   $modal.$animateTarget.removeClass('modal-' + options.size);
@@ -152,6 +156,7 @@ angular.module('ngQuantum.modal', ['ngQuantum.popMaster'])
                               clearHeight();
                               options.autoDestroy && $modal && $modal.destroy();
                           });
+                          angular.element('body').removeClass('modal-open');
                           return promise;
                           
                       };

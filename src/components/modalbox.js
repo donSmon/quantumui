@@ -28,7 +28,7 @@ angular.module('ngQuantum.modalBox', ['ngQuantum.modal'])
                       var $modalBox = {}, element = config.element, $buttons;
 
                       var options = angular.extend({}, defaults, config);
-                      attr && angular.forEach(['afterOk', 'afterConfirm', 'afterCancel', 'afterCustom'], function (key) {
+                      attr && angular.forEach(['afterOk', 'afterConfirm', 'afterCancel', 'afterCustom','onBoxShow'], function (key) {
                           if (angular.isDefined(attr[key])) {
                               options[key] = $parse(attr[key]);
                           }
@@ -49,8 +49,12 @@ angular.module('ngQuantum.modalBox', ['ngQuantum.modal'])
                       };
                       var show = $modalBox.show;
                       $modalBox.show = function () {
-                          if (options.boxType == 'prompt')
-                              scope.promptModel = '';
+                          if (options.boxType == 'prompt') {
+                              scope.promptModel = options.promptValue || '';
+                          }
+                          if (angular.isFunction(options.onBoxShow)) {
+                              options.onBoxShow(scope.$parent, { $scope: scope })
+                          }
                           var promise = show();
                           if ($buttons)
                               $buttons.on('click', $modalBox.hide);

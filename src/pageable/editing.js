@@ -9,7 +9,8 @@
             onShow: false,
             onHide: false,
             onChange: false,
-            disableRemote:true,
+            onInsertShow: false,
+            disableRemote:false,
             alias: 'aliasModel',
             container: false,
             type: 'insertedit',
@@ -21,7 +22,10 @@
             panelClasses: 'panel-default',
             templateUrl: 'pageable/editing.panel.tpl.html',
             noTemplate: false,
-            effectClasses: 'fastest from-left'
+            effectClasses: 'fastest from-left',
+            minHeight: 500,
+            showBackdrop: true,
+            displayMode: 'modal',
         };
         this.$get = ['templateHelper', '$timeout', '$animate', '$compile', function (templateHelper, $timeout, $animate, $compile) {
             function Factory(element, config, controller) {
@@ -51,15 +55,24 @@
                         normalizeTemplate(angular.element(html))
                         callback && callback();
                     }
-                    else
+                    else {
+                        
                         templateHelper.fetchTemplate(options.templateUrl).then(function (template) {
                             if (!angular.isElement(template))
                                 template = angular.element(template);
+                            if (options.displayMode == 'modal') {
+                                template.addClass('panel-modal');
+                            }
                             var transclude = template.find('.pageable-template-transclude');
                             transclude.length && transclude.html(html) || template.append(html);
-                            normalizeTemplate(template)
+                            normalizeTemplate(template);
+                            
+                            
+                                
                             callback && callback();
                         });
+                    }
+                       
                 }
                 function normalizeTemplate(template) {
                     var normalized, typeClasses = 'pageable-template-' + type;
@@ -111,6 +124,8 @@
                     var $child = scope.$new(), templateKey = tType + 'Template', viewKey = tType + 'View';
                     $child.templateType = tType;
                     $child.defaultTitle = options.defaultTitle;
+                    if (options.showBackdrop)
+                        scope.$showBackdrop = true;
                     function _show() {
                         if (options.multipleMode && scope[viewKey])
                             return;
@@ -135,7 +150,7 @@
                         }
                         $timeout(function () {
                             viewEl.addClass('pageable-template-wrapper').addClass(options.effectClasses)
-
+                            viewEl.css('min-height', options.minHeight);
                             if (options.multipleMode) {
                                 scope[viewKey] = viewEl;
                                 $animate.enter(viewEl, parent, after);
@@ -149,8 +164,15 @@
                             $compile(viewEl)($child);
                             $child.viewEl = viewEl;
                             options.onShow && scope.$eval(options.onShow);
-                            scope.$panelClasses = options.panelClasses
+                            scope.$panelClasses = options.panelClasses;
+                            if (tType == 'insert' && options.onInsertShow) {
+                                $child.$eval(options.onInsertShow);
+                            }
+                                
+                           
                         }, 0);
+                        if (options.showBackdrop)
+                            angular.element('body').addClass('modal-open');
                     };
                     function getRowField() {
                         $timeout(function () {
@@ -169,6 +191,8 @@
                         viewEl && viewEl.length && $animate.leave(viewEl).then(function () { viewEl.remove() });
                         viewObj[viewKey] = false;
                         options.onHide && scope.$eval(options.onHide);
+                        if (options.showBackdrop)
+                            angular.element('body').removeClass('modal-open');
                     };
                     $child.$show = function () {
                         getRowField();
@@ -177,7 +201,6 @@
                         else
                             templateTransclude(_show);
                     };
-                    if (tType !== 'detail') {
                         function setRowField() {
                             $timeout(function () {
                                 if (tType !== 'insert')
@@ -202,6 +225,7 @@
                             } else {
                                 var promise = controller.saveRow($child[options.alias], tType == 'insert');
                                 promise.then(function () {
+                                    setRowField();
                                     $child.$back();
                                 })
                             }
@@ -229,7 +253,6 @@
                             }, 0)
 
                         };
-                    }
                     
                     return $child;
                 }
@@ -266,7 +289,7 @@
                     }
                     element.addClass('pageable-template-container')
                     angular.isDefined(attr.ngModelOptions) && (options.modelOptions = attr.ngModelOptions)
-                    var template = new $pageableTemplate(element, options, controller)
+                    var template = new $pageableTemplate(element, options, controller, attr)
                 }
             }
         };
