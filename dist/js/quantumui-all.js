@@ -1,11 +1,11 @@
 /*!
  * QuantumUI Free v1.0.0 (http://quantumui.org)
- * Copyright 2014-2015 Mehmet Otkun, quantumui.org
+ * Copyright 2014-2016 Mehmet Otkun, quantumui.org
  */
 
 /*!
  * QuantumUI Free v1.0.0 (http://quantumui.org)
- * Copyright 2014-2015 Mehmet Otkun, quantumui.org
+ * Copyright 2014-2016 Mehmet Otkun, quantumui.org
  */
 (function (window, angular, undefined) {
     'use strict';
@@ -6442,12 +6442,16 @@ angular.module('ngQuantum.scrollbar', ['ngQuantum.services.helpers', 'ngQuantum.
                       if (/y|both/.test(options.axis)) {
                           if (height > 0 && scope.maxHeight < height && $container && $container.outerHeight() >= scope.maxHeight && ($container[0].scrollHeight > $container[0].clientHeight)) {
                                   scope._scrollHeight = height, applyY(height);
-                              $y.bar && $y.bar.css('visibilty', '').show();
-                              $y.bar.visible = true;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', '').show();
+                                $y.bar.visible = true;
+                              }
                           } else {
                               $container.scrollTop(0)
-                              $y.bar && $y.bar.css('visibilty', 'hidden');
-                              $y.bar.visible = false;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', 'hidden');
+                                $y.bar.visible = false;
+                              }
                           }
                           if (scope.scrollTop > 0 && $container.height() < height) {
                               $container.scrollTop(scope.scrollTop);
@@ -7238,13 +7242,13 @@ var selectApp = angular.module('ngQuantum.select', [
                               element.html(selected)
                               if (!options.disableClear && !options.multiple) {
                                   var clrIcon = angular.element(clearIcon)
-                                  clrIcon.one('click', function (evt) {
+                                  clrIcon.on('click', function (evt) {
                                           evt.preventDefault();
                                           evt.stopPropagation();
                                           $timeout(function () {
                                               scope.$lastSelected && (scope.$lastSelected.selected = false);
                                               controller.$setViewValue(null);
-                                              controller.$render()
+                                              $select.$render()
                                           }, 0)
 
                                       });
@@ -7411,6 +7415,12 @@ var selectApp = angular.module('ngQuantum.select', [
                           item.selected = false;
                       })
                   }
+                  scope.$parent.$watch(attr.ngModel, function (newValue, oldValue) {
+                      if (newValue || newValue === null) {
+                          controller.$setViewValue(newValue)
+                          $select.render();
+                      }
+                  });
                   return $select;
               }
               return SelectFactory;
@@ -8720,19 +8730,31 @@ angular.module('ngQuantum.pageable.blocker', [])
                 if (copt.selectionMode == 'row' && copt.selectable) {
                     element.on('click', function (evt) {
                         if (!evt.isDefaultPrevented()) {
+                            if (copt.singleSelect) {
+                                 controller.resetRowSelection();
+                            }
+                            
                             element.toggleClass(copt.selectionClass);
                             scope.$apply(function () {
-                                controller.setRowSelection(scope[controller.rowField])
-                            })
+                                controller.setRowSelection(scope[controller.rowField]);
+                            });
                         }
-
-                    })
+                        
+                    });
+                    element.on('dblclick', function (evt) {
+                        scope.$apply(function () {
+                            controller.doubleClickRow(scope[controller.rowField]);
+                        });
+                    });
                     scope.$watch(controller.rowField, function () {
                         element.removeClass(copt.selectionClass);
                     });
                     scope.$on('$refreshPager', function () {
                         element.removeClass(copt.selectionClass);
-                    })
+                    });
+                    scope.$on('$resetRowSelection', function () {
+                        element.removeClass(copt.selectionClass);
+                    });
                 }
                 scope.removeRow = function (item) {
                     item = item || scope[controller.rowField];
@@ -8847,7 +8869,6 @@ angular.module('ngQuantum.pageable.blocker', [])
                     }
                     else
                         tScope[type + 'Template'] = normalized;
-                    console.log('type',type)
                     transcluded = true;
                 }
                 function getTableColumnCount(table) {
@@ -8875,7 +8896,6 @@ angular.module('ngQuantum.pageable.blocker', [])
                         var viewEl = angular.element(tScope[templateKey]),
                            parent,
                            after;
-                        console.log('dsdsds', viewEl, tScope)
                         if (container == 'over') {
                             parent = controller.shellElement;
                             var items = controller.shellElement.find('.pageable-item');
@@ -9132,10 +9152,14 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
         pagerTamplate: false,
         lazyAjax: true,
         selectable: false,
+        singleSelect: false,
         selectionMode: 'row',
         selectionClass:'active',
         recordsField: 'records',
-        totalField: 'totalResult'
+        totalField: 'totalResult',
+        onSelectRow: false,
+        onDblClickRow: false,
+        showHeaderForZeroResult: false
     };
     this.$get = ['$timeout', '$filter', '$http', '$rootScope', '$parse', '$helpers','$q', '$lazyRequest',
         function ($timeout, $filter, $http, $rootScope, $parse, $helpers, $q, $lazyRequest) {
@@ -9144,14 +9168,14 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
                 var $pageable = {}, options = {}, currentPage = 1;
                 attr && (config = $helpers.parseOptions(attr, config))
                   
-                options = $pageable.$options = angular.extend(defaults, config);
+                options = $pageable.$options = angular.extend({}, defaults, config);
                 var scope = $pageable.$scope = options.$scope || $rootScope.$new();
                 if (attr) {
                     if (angular.isDefined(attr.qoAllOptions)) {
                         options = scope.$eval(attr.qoAllOptions)
                     } else {
                         options = $pageable.$options = $helpers.observeOptions(attr, $pageable.$options);
-                        angular.forEach(['formatRequest', 'formatData', 'loadError', 'deleted', 'updated', 'inserted', 'onRefresh'],
+                        angular.forEach(['formatRequest', 'formatData', 'loadError', 'deleted', 'updated', 'inserted', 'onRefresh', 'onSelectRow', 'onDblClickRow'],
                             function (val) {
                                 if (angular.isDefined(attr[val])) {
                                     options[val] = $parse(attr[val]);
@@ -9676,15 +9700,26 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
                 }
                 function setRowSelection(item) {
                     var index = scope.selectedRows.indexOf(item);
-                    if (index < 0)
+                    if (index < 0) {
                         scope.selectedRows.push(item);
-                    else
+                        options.onSelectRow && options.onSelectRow(scope)(item);
+                    } else {
                         scope.selectedRows.splice(index, 1);
+                    }
                 }
                 $pageable.splicePages = function (pageNumbers, pages) {
                     return splicePages(pageNumbers, pages);
                 }
                 $pageable.setRowSelection = setRowSelection;
+                $pageable.resetRowSelection = resetRowSelection;
+                function resetRowSelection() {
+                    scope.selectedRows = [];
+                    scope.$broadcast('$resetRowSelection')
+                }
+                $pageable.doubleClickRow = doubleClickRow;
+                function doubleClickRow(item) {
+                    options.onDblClickRow && options.onDblClickRow(scope)(item);
+                }
                 $pageable.removeRow = function (item) {
                     removeRow(item)
                     if (options.refreshOnChange)
@@ -10186,10 +10221,14 @@ angular.module('ngQuantum.pageable.zeroresult', [])
             scope.$watch('totalResult', function (newVal, oldVal) {
                 if (newVal) {
                     element.removeClass('visible')
-                    controller.tableElement && controller.tableElement.show();
+                    if (controller.$options.showHeaderForZeroResult === false) {
+                        controller.tableElement && controller.tableElement.show();
+                    }
                     controller.$container && controller.$container.removeClass('no-result-found')
                 } else {
-                    controller.tableElement && controller.tableElement.hide();
+                    if (controller.$options.showHeaderForZeroResult === false) {
+                        controller.tableElement && controller.tableElement.hide();
+                    }
                     controller.$container && controller.$container.addClass('no-result-found')
                     element.addClass('visible')
                 }

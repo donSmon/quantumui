@@ -94,7 +94,6 @@
                     }
                     else
                         tScope[type + 'Template'] = normalized;
-                    console.log('type',type)
                     transcluded = true;
                 }
                 function getTableColumnCount(table) {
@@ -122,7 +121,6 @@
                         var viewEl = angular.element(tScope[templateKey]),
                            parent,
                            after;
-                        console.log('dsdsds', viewEl, tScope)
                         if (container == 'over') {
                             parent = controller.shellElement;
                             var items = controller.shellElement.find('.pageable-item');

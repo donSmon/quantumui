@@ -44,10 +44,14 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
         pagerTamplate: false,
         lazyAjax: true,
         selectable: false,
+        singleSelect: false,
         selectionMode: 'row',
         selectionClass:'active',
         recordsField: 'records',
-        totalField: 'totalResult'
+        totalField: 'totalResult',
+        onSelectRow: false,
+        onDblClickRow: false,
+        showHeaderForZeroResult: false
     };
     this.$get = ['$timeout', '$filter', '$http', '$rootScope', '$parse', '$helpers','$q', '$lazyRequest',
         function ($timeout, $filter, $http, $rootScope, $parse, $helpers, $q, $lazyRequest) {
@@ -56,14 +60,14 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
                 var $pageable = {}, options = {}, currentPage = 1;
                 attr && (config = $helpers.parseOptions(attr, config))
                   
-                options = $pageable.$options = angular.extend(defaults, config);
+                options = $pageable.$options = angular.extend({}, defaults, config);
                 var scope = $pageable.$scope = options.$scope || $rootScope.$new();
                 if (attr) {
                     if (angular.isDefined(attr.qoAllOptions)) {
                         options = scope.$eval(attr.qoAllOptions)
                     } else {
                         options = $pageable.$options = $helpers.observeOptions(attr, $pageable.$options);
-                        angular.forEach(['formatRequest', 'formatData', 'loadError', 'deleted', 'updated', 'inserted', 'onRefresh'],
+                        angular.forEach(['formatRequest', 'formatData', 'loadError', 'deleted', 'updated', 'inserted', 'onRefresh', 'onSelectRow', 'onDblClickRow'],
                             function (val) {
                                 if (angular.isDefined(attr[val])) {
                                     options[val] = $parse(attr[val]);
@@ -282,20 +286,31 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
                         $pageable.loadRemote();
                     }
                     else {
+						var termList = false;
+						if (angular.isObject(term)) {
+							termList = term;
+						}
                         modelData = $filter('filter')($pageable.localdata, function (item, key) {
-                            var match = false, i = 0;
-                            while (!match && i < fields.length) {
+                            var match = false, matchAll = true, i = 0;
+                            while ((!match || termList) && i < fields.length) {
+								if (termList) {
+									term = termList[fields[i]];
+								}
+								
                                 var value = $helpers.getFieldValue(item, fields[i]);
                                 if (value) {
-                                    if (angular.isString(value))
+                                    if (angular.isString(value)) {
                                         match = (value.toLowerCase()).indexOf(term.toLowerCase()) > -1;
-                                    else
+										matchAll = match && matchAll;
+									} else {
                                         match = (value == term);
+										matchAll = match && matchAll;
+									}
                                 }
 
                                 i++;
                             }
-                            return match;
+                            return termList ? matchAll && match : match;
                         });
                         scope.totalResult = modelData.length;
                         $pageable.getRows();
@@ -588,15 +603,39 @@ angular.module('ngQuantum.pageable.factory', ['ngQuantum.services.helpers'])
                 }
                 function setRowSelection(item) {
                     var index = scope.selectedRows.indexOf(item);
-                    if (index < 0)
+                    if (index < 0) {
+                        if (options.singleSelect) {
+                             resetRowSelection();
+                        }
                         scope.selectedRows.push(item);
-                    else
+                        if (options.onSelectRow) {
+                            var fn = options.onSelectRow(scope);
+                            if (typeof fn === 'function') {
+                                fn(item);
+                            }
+                        }
+                    } else if (false == options.singleSelect) {
                         scope.selectedRows.splice(index, 1);
+                    }
                 }
                 $pageable.splicePages = function (pageNumbers, pages) {
                     return splicePages(pageNumbers, pages);
                 }
                 $pageable.setRowSelection = setRowSelection;
+                $pageable.resetRowSelection = resetRowSelection;
+                function resetRowSelection() {
+                    scope.selectedRows = [];
+                    scope.$broadcast('$resetRowSelection')
+                }
+                $pageable.doubleClickRow = doubleClickRow;
+                function doubleClickRow(item) {
+                    if (options.onDblClickRow) {
+                        var fn = options.onDblClickRow(scope);
+                        if (typeof fn === 'function') {
+                            fn(item);
+                        }
+                    }
+                }
                 $pageable.removeRow = function (item) {
                     removeRow(item)
                     if (options.refreshOnChange)

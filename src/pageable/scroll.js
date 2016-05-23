@@ -11,10 +11,14 @@ angular.module('ngQuantum.pageable.scroll', ['ngQuantum.scrollbar'])
                 return;
             var tfoot = tag == 'tfoot';
             var parent = tElm.parent(), container = parent.parent(), appended = false;
-            tElm.removeClass('nq-fix-table-scroll')
-            var table = angular.element('<table style="position:absolute;"></table>').html(tElm.clone());
-            tfoot && table.css('bottom', '0') || table.css('top','0')
+            tElm.removeClass('nq-fix-table-scroll');
+            var table = false;
             return function postLink(scope, element, attr, controller) {
+                if (false === table) {
+                    table = angular.element('<table style="position:absolute;"></table>').html(tElm.clone());
+                    tfoot && table.css('bottom', '0') || table.css('top','0')
+                }
+                
                 var pos = container.css('position');
                 (!pos || pos==='static') && container.css('position', 'relative')
                 container.on('scroll', function () {

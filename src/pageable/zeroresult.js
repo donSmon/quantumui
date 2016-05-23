@@ -21,10 +21,14 @@ angular.module('ngQuantum.pageable.zeroresult', [])
             scope.$watch('totalResult', function (newVal, oldVal) {
                 if (newVal) {
                     element.removeClass('visible')
-                    controller.tableElement && controller.tableElement.show();
+                    if (controller.$options.showHeaderForZeroResult === false) {
+                        controller.tableElement && controller.tableElement.show();
+                    }
                     controller.$container && controller.$container.removeClass('no-result-found')
                 } else {
-                    controller.tableElement && controller.tableElement.hide();
+                    if (controller.$options.showHeaderForZeroResult === false) {
+                        controller.tableElement && controller.tableElement.hide();
+                    }
                     controller.$container && controller.$container.addClass('no-result-found')
                     element.addClass('visible')
                 }

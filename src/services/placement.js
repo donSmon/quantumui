@@ -80,7 +80,7 @@ angular.module('ngQuantum.services.placement', ['ngQuantum.services.helpers'])
                     $target.attr('class', classList.replace('bottom', 'top'));
                 }
                 else if (offset.top > (dh - th)) {
-                    $target.css('left', (eo.top - th));
+                    $target.css('top', (eo.top - th));
                     $target.attr('class', classList.replace('top', 'bottom'));
                 }
                     

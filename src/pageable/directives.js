@@ -88,19 +88,32 @@
                 if (copt.selectionMode == 'row' && copt.selectable) {
                     element.on('click', function (evt) {
                         if (!evt.isDefaultPrevented()) {
-                            element.toggleClass(copt.selectionClass);
                             scope.$apply(function () {
-                                controller.setRowSelection(scope[controller.rowField])
-                            })
+                                controller.setRowSelection(scope[controller.rowField]);
+                            });
+                            
+                            if (copt.singleSelect) {
+                                element.addClass(copt.selectionClass);
+                            } else {
+                                element.toggleClass(copt.selectionClass);
+                            }
                         }
-
-                    })
+                        
+                    });
+                    element.on('dblclick', function (evt) {
+                        scope.$apply(function () {
+                            controller.doubleClickRow(scope[controller.rowField]);
+                        });
+                    });
                     scope.$watch(controller.rowField, function () {
                         element.removeClass(copt.selectionClass);
                     });
                     scope.$on('$refreshPager', function () {
                         element.removeClass(copt.selectionClass);
-                    })
+                    });
+                    scope.$on('$resetRowSelection', function () {
+                        element.removeClass(copt.selectionClass);
+                    });
                 }
                 scope.removeRow = function (item) {
                     item = item || scope[controller.rowField];

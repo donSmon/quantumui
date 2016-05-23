@@ -1,11 +1,11 @@
 /*!
  * QuantumUI Free v1.0.0 (http://quantumui.org)
- * Copyright 2014-2015 Mehmet Otkun, quantumui.org
+ * Copyright 2014-2016 Mehmet Otkun, quantumui.org
  */
 
 /*!
  * QuantumUI Free v1.0.0 (http://quantumui.org)
- * Copyright 2014-2015 Mehmet Otkun, quantumui.org
+ * Copyright 2014-2016 Mehmet Otkun, quantumui.org
  */
 (function (window, angular, undefined) {
     'use strict';
@@ -6442,12 +6442,16 @@ angular.module('ngQuantum.scrollbar', ['ngQuantum.services.helpers', 'ngQuantum.
                       if (/y|both/.test(options.axis)) {
                           if (height > 0 && scope.maxHeight < height && $container && $container.outerHeight() >= scope.maxHeight && ($container[0].scrollHeight > $container[0].clientHeight)) {
                                   scope._scrollHeight = height, applyY(height);
-                              $y.bar && $y.bar.css('visibilty', '').show();
-                              $y.bar.visible = true;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', '').show();
+                                $y.bar.visible = true;
+                              }
                           } else {
                               $container.scrollTop(0)
-                              $y.bar && $y.bar.css('visibilty', 'hidden');
-                              $y.bar.visible = false;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', 'hidden');
+                                $y.bar.visible = false;
+                              }
                           }
                           if (scope.scrollTop > 0 && $container.height() < height) {
                               $container.scrollTop(scope.scrollTop);
@@ -7238,13 +7242,13 @@ var selectApp = angular.module('ngQuantum.select', [
                               element.html(selected)
                               if (!options.disableClear && !options.multiple) {
                                   var clrIcon = angular.element(clearIcon)
-                                  clrIcon.one('click', function (evt) {
+                                  clrIcon.on('click', function (evt) {
                                           evt.preventDefault();
                                           evt.stopPropagation();
                                           $timeout(function () {
                                               scope.$lastSelected && (scope.$lastSelected.selected = false);
                                               controller.$setViewValue(null);
-                                              controller.$render()
+                                              $select.$render()
                                           }, 0)
 
                                       });
@@ -7411,6 +7415,12 @@ var selectApp = angular.module('ngQuantum.select', [
                           item.selected = false;
                       })
                   }
+                  scope.$parent.$watch(attr.ngModel, function (newValue, oldValue) {
+                      if (newValue || newValue === null) {
+                          controller.$setViewValue(newValue)
+                          $select.render();
+                      }
+                  });
                   return $select;
               }
               return SelectFactory;

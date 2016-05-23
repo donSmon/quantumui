@@ -197,7 +197,7 @@ angular.module('ngQuantum.services.helpers', [])
                 var body = document.body,
                             html = document.documentElement;
 
-                var height = Math.max(body.scrollHeight, body.offsetHeight,
+                var height = Math.min(body.scrollHeight, body.offsetHeight,
                                        html.clientHeight, html.scrollHeight, html.offsetHeight);
                 return height;
             }

@@ -430,12 +430,16 @@ angular.module('ngQuantum.scrollbar', ['ngQuantum.services.helpers', 'ngQuantum.
                       if (/y|both/.test(options.axis)) {
                           if (height > 0 && scope.maxHeight < height && $container && $container.outerHeight() >= scope.maxHeight && ($container[0].scrollHeight > $container[0].clientHeight)) {
                                   scope._scrollHeight = height, applyY(height);
-                              $y.bar && $y.bar.css('visibilty', '').show();
-                              $y.bar.visible = true;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', '').show();
+                                $y.bar.visible = true;
+                              }
                           } else {
                               $container.scrollTop(0)
-                              $y.bar && $y.bar.css('visibilty', 'hidden');
-                              $y.bar.visible = false;
+                              if ($y.bar) {
+                                $y.bar.css('visibilty', 'hidden');
+                                $y.bar.visible = false;
+                              }
                           }
                           if (scope.scrollTop > 0 && $container.height() < height) {
                               $container.scrollTop(scope.scrollTop);
